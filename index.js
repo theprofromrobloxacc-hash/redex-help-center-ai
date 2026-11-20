@@ -16,22 +16,33 @@ const HELP_CENTER_URL =
 const SYSTEM_PROMPT = `
 You are Redex AI, the official AI support assistant for Redex.
 
-Be friendly, casual and helpful. Talk naturally.
-Use occasional emojis. Keep answers clear and easy to understand.
+Your personality:
+- Friendly, casual and helpful.
+- Talk naturally, like a real person.
+- Use occasional emojis.
+- Never sound robotic.
+- Keep answers clear and easy to understand.
 
-Help with Redex website questions, features, troubleshooting,
-Roblox-related features and general questions when appropriate.
+Your job:
+- Help users with Redex website questions.
+- Explain Redex features.
+- Troubleshoot website problems.
+- Help users understand Roblox-related features.
+- Answer general questions when appropriate.
 
-Never ask for passwords, cookies or API keys.
-Never invent Redex features or claim an issue is fixed when it isn't.
-If you don't know something, say so honestly.
+Rules:
+- Never pretend you can access a user's account.
+- Never ask for passwords, cookies or API keys.
+- Never invent Redex features or claim an issue is fixed when it isn't.
+- If you don't know something, say so honestly.
+- Stay helpful and respectful.
 `;
 
 app.get("/", (req, res) => {
   res.send("Redex AI Help Center is online!");
 });
 
-// Redex verification entrance
+// Verification entrance
 app.get("/verify", (req, res) => {
   res.type("html").send(`<!DOCTYPE html>
 <html lang="en">
@@ -42,6 +53,7 @@ app.get("/verify", (req, res) => {
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
 <style>
 * { box-sizing: border-box; }
+
 body {
   margin: 0;
   min-height: 100vh;
@@ -52,6 +64,7 @@ body {
   color: white;
   font-family: Arial, sans-serif;
 }
+
 .panel {
   width: 100%;
   max-width: 420px;
@@ -62,22 +75,35 @@ body {
   border-radius: 20px;
   box-shadow: 0 0 35px #a0000030;
 }
+
 .logo {
   color: #ff3030;
   font-size: 34px;
   font-weight: 900;
   letter-spacing: 3px;
 }
+
 h1 { font-size: 23px; margin: 18px 0 10px; }
-p { color: #aaa; line-height: 1.5; font-size: 14px; }
+
+p {
+  color: #aaa;
+  line-height: 1.5;
+  font-size: 14px;
+}
+
 #widget {
   display: flex;
   justify-content: center;
   margin: 26px 0;
 }
-#status { color: #ff7777; min-height: 22px; }
+
+#status {
+  color: #ff7777;
+  min-height: 22px;
+}
 </style>
 </head>
+
 <body>
 <div class="panel">
   <div class="logo">REDEX</div>
@@ -114,7 +140,9 @@ async function verifyVisitor(token) {
   try {
     const response = await fetch("/api/verify", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify({ token })
     });
 
@@ -129,7 +157,10 @@ async function verifyVisitor(token) {
 
   } catch (error) {
     statusText.textContent = error.message;
-    if (window.turnstile) turnstile.reset();
+
+    if (window.turnstile) {
+      turnstile.reset();
+    }
   }
 }
 
@@ -139,7 +170,7 @@ showWidget();
 </html>`);
 });
 
-// Validate Cloudflare token on the server
+// Cloudflare server-side verification
 app.post("/api/verify", async (req, res) => {
   try {
     const secret = process.env.TURNSTILE_SECRET_KEY;
@@ -160,7 +191,7 @@ app.post("/api/verify", async (req, res) => {
           "Content-Type": "application/x-www-form-urlencoded"
         },
         body: new URLSearchParams({
-          secret,
+          secret: secret,
           response: token
         })
       }
@@ -175,7 +206,7 @@ app.post("/api/verify", async (req, res) => {
     ) {
       return res.status(403).json({
         success: false,
-        error: "Cloudflare verification failed. Try again."
+        error: "Cloudflare verification failed. Please try again."
       });
     }
 
@@ -183,6 +214,7 @@ app.post("/api/verify", async (req, res) => {
 
   } catch (error) {
     console.error("Verification error:", error);
+
     res.status(500).json({
       success: false,
       error: "Verification service unavailable."
@@ -190,7 +222,7 @@ app.post("/api/verify", async (req, res) => {
   }
 });
 
-// Existing Redex AI chat endpoint
+// Existing Redex AI chat
 app.post("/api/chat", async (req, res) => {
   try {
     if (!process.env.GROQ_API_KEY) {
@@ -228,7 +260,7 @@ app.post("/api/chat", async (req, res) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": \`Bearer \${process.env.GROQ_API_KEY}\`
+          "Authorization": `Bearer ${process.env.GROQ_API_KEY}`
         },
         body: JSON.stringify({
           model: "openai/gpt-oss-20b",
@@ -246,6 +278,7 @@ app.post("/api/chat", async (req, res) => {
 
     if (!response.ok) {
       console.error("Groq error:", data);
+
       return res.status(502).json({
         error: "The AI couldn't respond right now. Try again."
       });
@@ -263,6 +296,7 @@ app.post("/api/chat", async (req, res) => {
 
   } catch (error) {
     console.error("Chat error:", error);
+
     res.status(500).json({
       error: "Something went wrong. Please try again."
     });
@@ -270,5 +304,5 @@ app.post("/api/chat", async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(\`Redex AI running on port \${PORT}\`);
+  console.log(`Redex AI running on port ${PORT}`);
 });
